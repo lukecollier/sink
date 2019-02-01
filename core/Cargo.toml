@@ -1,0 +1,10 @@
+[package]
+name = "core"
+version = "0.1.0"
+authors = ["collierl <lukecollier@rentalcars.com>"]
+edition = "2018"
+
+[dependencies]
+notify = "4.0.0"
+twox-hash = "1.1.2"
+walkdir = "2"
