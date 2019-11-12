@@ -1,135 +1,123 @@
-use twox_hash::XxHash;
+// pub mod directory {
+//     use std::io::{Result, Error, ErrorKind};
+//     use std::hash::Hasher;
+//     use std::path::Path;
+//     use std::fs;
 
-use std::io::{Result, Error, ErrorKind};
-use std::hash::Hasher;
-use std::path::{PathBuf, Path};
-use std::fs;
+//     use walkdir::{WalkDir, DirEntry};
+//     use twox_hash::XxHash;
 
-use walkdir::{WalkDir, DirEntry};
+//     // 32,767 mac osx's max files in a directory
+//     type MaxDirFiles = u16;
 
-// 32,767 mac osx's max files in a directory
-type MaxDirFiles = u16;
+//     #[derive(Clone)]
+//     pub struct HashTree<T> {
+//         key: u64,
+//         nodes: Vec<Node<T>>,
+//     }
 
-pub struct HashTree<T> {
-    key: u64,
-    nodes: Vec<Node<T>>,
-}
+//     #[derive(Clone)]
+//     pub struct Leaf<T> {
+//         key: u64,
+//         value: T
+//     }
 
-pub enum Node<T> {
-    Node(HashTree<T>),
-    Leaf(T),
-}
+//     #[derive(Clone)]
+//     pub enum Node<T> {
+//         Dir(HashTree<T>),
+//         File(Leaf<T>)
+//     }
 
-impl<T> HashTree<T> {
-    pub fn new() -> Self {
-        let vec = vec![];
-        let vec2: Vec<Node<T>> = vec![];
-        HashTree { key: calc_hash(&vec), nodes: vec2 }
-    }
+//     impl<T> HashTree<T> {
+//         pub fn new() -> Self {
+//             HashTree { key: calc_hash(&vec![]), nodes: vec![] }
+//         }
 
-    pub fn read(dir: &Path) -> Self {
-        let dir_tree: Result<HashTree<u8>> = map_dir(dir);
-        Self::new()
-    }
-}
+//         pub fn read(dir: &Path) -> Self {
+//             let dir_tree: Result<HashTree<u8>> = map_dir(dir);
+//             Self::new()
+//         }
 
-fn visit_dirs(dir: &Path, cb: &Fn(PathBuf) -> Result<u64>) -> Result<()> {
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_dir() {
-                visit_dirs(&path, cb)?;
-            } else {
-                cb(path.to_path_buf())?;
-            }
-        }
-    }
-    Ok(())
-}
+//         fn insert(&mut self, node: Node<T>, new_key: u64) {
+// 			self.key = new_key;
+// 			self.nodes.insert(0, node);
+//         }
+//     }
 
-fn map_dir<T>(dir: &Path) -> Result<HashTree<T>> {
-    for entry in WalkDir::new(dir).contents_first(true) {
-        let entry = entry.unwrap();
-        if entry.path().is_dir() && is_leaf_dir(entry.path()).unwrap() {
-            println!("{} is leaf {} with hash directory {}", entry.path().display(), 
-                     is_leaf_dir(entry.path()).unwrap(),
-                     calc_hash(&reduce_dir(entry.path()).unwrap()));
-        } else {
-            println!("{} is leaf {}", entry.path()
-                     .display(), is_leaf_dir(entry.path()).unwrap());
-        }
-    }
+//     fn is_hidden(entry: &DirEntry) -> bool {
+//         entry.file_name().to_str()
+//             .map(|s| s.starts_with("."))
+//             .unwrap_or(false)
+//     }
 
-    Ok(HashTree::new())
-}
+//     fn map_dir<T>(dir: &Path) -> Result<HashTree<T>> {
+//         let walker = WalkDir::new(dir);
+//         for entry in walker.into_iter() {
+//             let entry = entry.unwrap();
+//             if entry.path().is_dir() && is_leaf_dir(entry.path()).unwrap() {
+// 				println!("{}", entry.path().display());
+//                 // hash_dir(&entry.path()).unwrap();
+//             } else {
+// 				println!("{}", entry.path().display());
+//                 // hash_dir(&entry.path()).unwrap();
+//             }
+//         }
+//         Ok(HashTree::new())
+//     }
 
-fn is_leaf_dir(dir: &Path) -> Result<bool> {
-    if dir.is_dir() {
-        match fs::read_dir(dir) {
-            Ok(read_dir) => Ok(count_dirs(read_dir) == 0),
-            Err(e) => Err(e) 
-        }
-    } else {
-        Ok(false)
-    }
-}
+//     fn is_leaf_dir(dir: &Path) -> Result<bool> {
+//         if dir.is_dir() {
+//             match fs::read_dir(dir) {
+//                 Ok(read_dir) => Ok(count_dirs(read_dir) == 0),
+//                 Err(e) => Err(e) 
+//             }
+//         } else {
+//             Ok(false)
+//         }
+//     }
 
-fn count_dirs(read_dir: fs::ReadDir) -> MaxDirFiles {
-    read_dir.map(|x| x.unwrap())
-        .filter(|x| x.path().is_dir())
-        .fold(0, |acc, _| acc + 1)
-}
+//     fn count_dirs(read_dir: fs::ReadDir) -> MaxDirFiles {
+//         read_dir.map(|x| x.unwrap())
+//             .filter(|x| x.path().is_dir())
+//             .fold(0, |acc, _| acc + 1)
+//     }
 
+//     fn reduce_dir(dir: &Path) -> Result<Vec<u8>> {
+//         let mut buf: Vec<u8> = Vec::new();
+//         if dir.is_dir() {
+//             for entry in fs::read_dir(dir)? {
+//                 let path = entry?.path();
+//                 if path.is_dir() {
+//                     buf.extend_from_slice(&reduce_dir(&path)?);
+//                 } else {
+//                     let file_bytes: Vec<u8> = fs::read(&path)?;
+//                     buf.extend_from_slice(&file_bytes);
+//                 }
+//             }
+//             Ok(buf)
+//         } else {
+//             // Err(Error::new(ErrorKind::Other, "is not a directory"))
+//             Ok(buf)
+//         }
+//     }
 
-pub fn hash_file(path: PathBuf) -> Result<u64> {
-    let file_bytes = fs::read(&path)?; 
-    Ok(calc_hash(&file_bytes))
-}
+//     fn hash_dir(dir: &Path) -> Result<u64> {
+//         match reduce_dir(&dir) {
+//             Ok(bytes) => Ok(calc_hash(&bytes)),
+//             Err(e) => Err(e)
+//         }
+//     }
 
+//     pub fn calc_hash(bytes: &Vec<u8>) -> u64 {
+//         let mut hasher = XxHash::with_seed(0);
+//         hasher.write(bytes);
+//         hasher.finish()
+//     }
 
-fn reduce_dir(dir: &Path) -> Result<Vec<u8>> {
-    let mut buf: Vec<u8> = Vec::new();
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir)? {
-            let path = entry?.path();
-            if path.is_dir() {
-                buf.extend_from_slice(&reduce_dir(&path)?);
-            } else {
-                let file_bytes: Vec<u8> = fs::read(&path)?;
-                buf.extend_from_slice(&file_bytes);
-            }
-        }
-    }
-    Ok(buf)
-}
-
-fn hash_dir(dir: &Path) -> Result<u64> {
-    let file_name: &str = dir.file_name().unwrap().to_str().unwrap();
-    let mut buf: Vec<u8> = Vec::new(); 
-    buf.extend_from_slice(file_name.as_bytes());
-    if dir.is_dir() {
-        for entry in fs::read_dir(dir)? {
-            let entry = entry?;
-            let path = entry.path();
-            if path.is_dir() {
-                hash_dir(&path)?;
-            } else {
-                let file_bytes: Vec<u8> = fs::read(&path)?;
-                buf.extend_from_slice(&file_bytes);
-            }
-        }
-    }
-    Ok(calc_hash(&buf))
-}
-
-pub fn hash_dirs(dir: &Path) -> Result<()> {
-    println!("{}", dir.display());
-    visit_dirs(dir, &hash_file)
-}
-
-pub fn calc_hash(bytes: &Vec<u8>) -> u64 {
-    let mut hasher = XxHash::with_seed(0);
-    hasher.write(bytes);
-    hasher.finish()
-}
+// 	#[cfg(test)]
+// 	mod tests {
+// 		#[test]
+// 		fn it_works() {
+// 		}
+// 	}
+// }

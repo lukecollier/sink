@@ -7,4 +7,6 @@ edition = "2018"
 [dependencies]
 notify = "4.0.0"
 twox-hash = "1.1.2"
+seahash = "3.0.5"
 walkdir = "2"
+bincode = "1.0.1"

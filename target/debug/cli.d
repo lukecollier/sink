@@ -1,1 +1,0 @@
-/Users/collierl/Project/Tinker/sink/target/debug/cli.dSYM: /Users/collierl/Project/Tinker/sink/cli/src/main.rs /Users/collierl/Project/Tinker/sink/client/src/lib.rs /Users/collierl/Project/Tinker/sink/core/src/directory.rs /Users/collierl/Project/Tinker/sink/core/src/lib.rs

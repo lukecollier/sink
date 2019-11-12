@@ -1,4 +1,5 @@
 mod directory;
+mod hash_tree;
 
 use twox_hash::XxHash;
 

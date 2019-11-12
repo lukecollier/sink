@@ -1,6 +1,8 @@
 # Sink /sɪŋk/ 
 
-A new way to syncronize files across systems
+_Nothing but the kitchen sink_
+
+A new way to syncronize files across systems!
 
 Status: Proof of Concept
 
@@ -13,6 +15,7 @@ Status: Proof of Concept
 - History, the entire log should be stored and recorded with key events (like a release) being easily identifiable and rollbackable
 
 ## Sub Goals
+
 - Fast, the platform should be synced in minutes over days
 - Documented errors, errors should provide all the information needed
 - Specification over implementation, specifications should be made after PoC phase
