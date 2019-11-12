@@ -22,7 +22,7 @@ localhost@user:~$ sink open <stream-name> # opens stream to a effective 'branch'
 syncronize project `~/project` with <stream-name> at <server-location>
 
 localhost@user:~$ vi # do some changes
-localhost@user:~$ cat ~/.config/sink/logs/<project-name>.log
+localhost@user:~$ cat ~/project/.sink/logs/<project-name>.log
 path/to/file.txt
 +hello, world
 -,
