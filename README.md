@@ -6,6 +6,30 @@ A new way to syncronize files across systems!
 
 Status: Proof of Concept
 
+## API Design
+
+_typical workflow for a new project_
+
+```console
+localhost@user:~$ sink start
+daemon started
+
+localhost@user:~$ sink new project # should behave like git init 
+cloning project to project, check `~/project/.sink/config.json` for options
+
+localhost@user:~$ cd project
+localhost@user:~$ sink open <stream-name> # opens stream to a effective 'branch' of name <stream-name>
+syncronize project `~/project` with <stream-name> at <server-location>
+
+localhost@user:~$ vi # do some changes
+localhost@user:~$ cat ~/.config/sink/logs/<project-name>.log
+path/to/file.txt
++hello, world
+-,
+
+localhost@user:~$ sink close <stream-name> # stop consuming resources and watching files
+```
+
 # Goals
 
 - Minimal, this project aims to have an extremely minimal api, subcommands * subcommands options will be the formulae for complexity here
