@@ -6,7 +6,7 @@ use serde::{Deserialize, Serialize};
 use tokio::io::AsyncReadExt;
 use tokio::sync::oneshot::error::TryRecvError;
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Debug)]
 pub enum Command {
     Open,
     Close,
@@ -47,7 +47,9 @@ impl CommandListener {
         self.commands.recv().await
     }
 
+    // todo: Check if a daemon exists
     pub async fn start() -> Result<Self> {
+        tokio::fs::remove_file(socket_path()).await?;
         let socket = tokio::net::UnixListener::bind(socket_path())?;
         let (shutdown, mut receiver) = tokio::sync::oneshot::channel();
         let (command_sender, command_receiver) = tokio::sync::mpsc::channel(100);
