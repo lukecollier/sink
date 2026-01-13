@@ -1,8 +1,8 @@
 [package]
 name = "server"
 version = "0.1.0"
-authors = ["collierl <lukecollier@rentalcars.com>"]
-edition = "2018"
+authors = ["lukecollier <me@lukecollier.dev>"]
+edition = "2024"
 
 [dependencies]
-ws = "0.7.9"
+ws = "0.9.2"

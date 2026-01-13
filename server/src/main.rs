@@ -6,5 +6,6 @@ fn main() {
             println!("recieved: {}", rec);
             out.send(format!("{{\"status\":\"OK\", \"recieved\":\"{}\"}}", rec))
         }
-    }).expect("failed to start server");
+    })
+    .expect("failed to start server");
 }
