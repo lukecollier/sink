@@ -1,5 +1,6 @@
 use std::{
     env,
+    path::PathBuf,
     process::ExitCode,
     thread,
     time::{Duration, Instant},
@@ -9,8 +10,7 @@ use clap::{Parser, Subcommand};
 use client::start_deamon;
 
 use anyhow::Result;
-use core::{is_daemon_running, objects};
-use std::path::Path;
+use core::{is_daemon_running, objects::Objects};
 
 use colored::*;
 
@@ -25,26 +25,46 @@ struct Cli {
 enum Commands {
     /// does testing things
     Init,
-    Open,
+    Open {
+        path: Option<PathBuf>,
+    },
+    Close {
+        path: Option<PathBuf>,
+    },
     Shutdown,
-    Close,
 }
 
-// Space 0 will ALWAYS be the command
+fn success(msg: &str) -> () {
+    let prefix = "[success]".green().bold();
+    println!("{prefix} {msg}")
+}
+fn error(msg: &str) -> () {
+    let prefix = "[error]".red().bold();
+    println!("{prefix} {msg}")
+}
+fn info(msg: &str) -> () {
+    let i_prefix = "[info]".blue().bold();
+    println!("{i_prefix} {msg}")
+}
+
+fn start_daemon_if_not_running(user: &str) -> Result<()> {
+    if !is_daemon_running() {
+        start_deamon(&user)?;
+        success("starting daemon");
+        // todo: need a spinner
+        loop {
+            if is_daemon_running() {
+                break;
+            }
+            thread::sleep(Duration::from_millis(100));
+        }
+        success("started daemon");
+    }
+    Ok(())
+}
+
 fn main() -> Result<ExitCode> {
     let mut hasher = seahash::SeaHasher::new();
-    fn success(msg: &str) -> () {
-        let prefix = "[success]".green().bold();
-        println!("{prefix} {msg}")
-    }
-    fn error(msg: &str) -> () {
-        let prefix = "[error]".red().bold();
-        println!("{prefix} {msg}")
-    }
-    fn info(msg: &str) -> () {
-        let i_prefix = "[info]".blue().bold();
-        println!("{i_prefix} {msg}")
-    }
     let user = std::env::var("USER")?;
 
     let args: Cli = Cli::parse();
@@ -52,37 +72,36 @@ fn main() -> Result<ExitCode> {
         Commands::Init => {
             let path = std::env::current_dir()?;
             let runtime = tokio::runtime::Builder::new_current_thread().build()?;
-            let objects = runtime.block_on(core::objects::DirectoryObject::from_directory(
-                &path,
-                &mut hasher,
-            ));
+            let objects = runtime.block_on(Objects::from_directory(&path, &mut hasher));
             let before = Instant::now();
             dbg!(objects?);
             let after = Instant::now();
             println!("{:?}", after - before);
             Result::Ok(ExitCode::SUCCESS)
         }
-        Commands::Open => {
-            if !is_daemon_running() {
-                start_deamon(&user)?;
-                success("starting daemon");
-                // todo: need a spinner
-                loop {
-                    if is_daemon_running() {
-                        break;
-                    }
-                    thread::sleep(Duration::from_millis(100));
-                }
-                success("started daemon");
-            }
-            info("did thing");
+        Commands::Open { path } => {
+            start_daemon_if_not_running(&user)?;
+            info("open");
+            let path = path.unwrap_or(env::current_dir()?);
+            core::messages::Command::Open { path }.send()?;
+            Result::Ok(ExitCode::SUCCESS)
+        }
+        Commands::Close { path } => {
+            start_daemon_if_not_running(&user)?;
+            info("close");
+            let path = path.unwrap_or(env::current_dir()?);
+            core::messages::Command::Close { path }.send()?;
             Result::Ok(ExitCode::SUCCESS)
         }
         Commands::Shutdown => {
             if is_daemon_running() {
-                core::messages::Command::Shutdown.send()?;
+                core::messages::Command::Shutdown {
+                    caller: "cli".to_string(),
+                }
+                .send()?;
                 info("shutdown sent, waiting...");
                 loop {
+                    // wait until the daemon is dead
                     if !is_daemon_running() {
                         break;
                     }
@@ -95,13 +114,6 @@ fn main() -> Result<ExitCode> {
                 info("daemon not running, no shutdown required");
                 return Result::Ok(ExitCode::FAILURE);
             }
-        }
-        Commands::Close => {
-            if !is_daemon_running() {
-                start_deamon(&user)?;
-            }
-            core::messages::Command::Close.send()?;
-            Result::Ok(ExitCode::SUCCESS)
         }
     }
 }

@@ -8,9 +8,9 @@ use tokio::sync::oneshot::error::TryRecvError;
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Command {
-    Open,
-    Close,
-    Shutdown,
+    Open { path: PathBuf },
+    Close { path: PathBuf },
+    Shutdown { caller: String },
 }
 
 fn socket_path() -> PathBuf {

@@ -1,11 +1,11 @@
-use std::{
-    fs::{File, create_dir_all},
-    path::PathBuf,
-};
+use std::{fs::create_dir_all, path::PathBuf};
 
 pub mod messages;
 pub mod objects;
+pub mod project;
+pub mod watcher;
 
+// todo: Probably be in client?
 pub fn is_daemon_running() -> bool {
     match std::fs::read_to_string(pid_path()) {
         Ok(pid_str) => {

@@ -6,6 +6,12 @@ A new way to syncronize files across systems!
 
 Status: Proof of Concept
 
+## Todo's:
+
+- Lot's of cloning + copy right now, should see where we can avoid this
+- Use a low effort async file watcher with polling when not in callaborative mode
+- 
+
 ## API Design
 
 _typical workflow for a new project_
@@ -32,11 +38,11 @@ localhost@user:~$ sink close <stream-name> # stop consuming resources and watchi
 
 # Goals
 
+- Callaborative, when someone joins someone elses streams should be able to see near real time updates of files.
 - Minimal, this project aims to have an extremely minimal api, subcommands * subcommands options will be the formulae for complexity here
 - Invisible, We want it to be a fire and forget mentallity, streams will be openable then will simply work.
 - Offline, when connections drop the system should calmly wait for connection to be restored and eventually become consistent. Thanks to the nature of online applications it should only matter that visibility is eventually obtained for conflicts.
-- Resource concious, users should not know the applications is even running once started
-- History, the entire log should be stored and recorded with key events (like a release) being easily identifiable and rollbackable
+- Resource concious (minimal threads, cpu time, memory usage etc), users should not know the applications is even running once started
 
 ## Sub Goals
 
