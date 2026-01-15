@@ -11,6 +11,7 @@ use client::start_deamon;
 
 use anyhow::Result;
 use core::{is_daemon_running, objects::Objects};
+use seahash::SeaHasher;
 
 use colored::*;
 
@@ -64,7 +65,6 @@ fn start_daemon_if_not_running(user: &str) -> Result<()> {
 }
 
 fn main() -> Result<ExitCode> {
-    let mut hasher = seahash::SeaHasher::new();
     let user = std::env::var("USER")?;
 
     let args: Cli = Cli::parse();
@@ -72,9 +72,10 @@ fn main() -> Result<ExitCode> {
         Commands::Init => {
             let path = std::env::current_dir()?;
             let runtime = tokio::runtime::Builder::new_current_thread().build()?;
-            let objects = runtime.block_on(Objects::from_directory(&path, &mut hasher));
+            let objects = runtime.block_on(Objects::from_directory::<SeaHasher>(&path));
             let before = Instant::now();
             dbg!(objects?);
+
             let after = Instant::now();
             println!("{:?}", after - before);
             Result::Ok(ExitCode::SUCCESS)

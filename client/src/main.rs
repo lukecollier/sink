@@ -1,10 +1,9 @@
 use std::process::ExitCode;
 
 use anyhow::*;
-use client::start_deamon;
+use client::run_client;
 
 fn main() -> Result<ExitCode> {
-    let user = std::env::var("USER")?;
-    start_deamon(&user)?;
+    run_client()?;
     Ok(ExitCode::SUCCESS)
 }

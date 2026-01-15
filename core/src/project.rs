@@ -4,7 +4,7 @@ use ignore::gitignore::{Gitignore, GitignoreBuilder};
 
 #[derive(Debug)]
 pub struct Project {
-    root: PathBuf,
+    pub root: PathBuf,
     git_ignore: Option<Gitignore>,
 }
 
@@ -12,6 +12,10 @@ pub struct Project {
 // a new GitIgnore with a root relative to that sub directory. We then traverse all our roots and
 // when they can be stripped from a path we're inside that root (so the global gitignore will still
 // work) after this we run the matches and if any are ignore then we ignore.
+//
+// note: To do this effectively i think we can just have a GitignoreBuilder that we keep adding
+// too, we then build and replace the old Gitignore everytime we detect a new Gitignore. We also
+// need to be able to update existing Gitignores to reflect updates to the gitignore dynamically
 impl Project {
     pub fn new_global_or_default(root: &Path) -> Self {
         Self::new_global(root).unwrap_or(Self {
@@ -69,7 +73,6 @@ impl Project {
     /// None if ignored, relative path if not ignored
     pub fn exists<'a>(&self, path: &'a Path, is_dir: bool) -> Option<&'a Path> {
         if let Result::Ok(relative_path) = path.strip_prefix(&self.root) {
-            println!("{path:?} -> {relative_path:?}");
             let Some(git_ignore) = &self.git_ignore else {
                 // if we have a gitignore do the ignores
                 return Some(relative_path);

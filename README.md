@@ -1,4 +1,5 @@
 # Sink /sɪŋk/ 
+test
 
 _Nothing but the kitchen sink_
 
@@ -10,7 +11,7 @@ Status: Proof of Concept
 
 - Lot's of cloning + copy right now, should see where we can avoid this
 - Use a low effort async file watcher with polling when not in callaborative mode
-- 
+- Amazing!
 
 ## API Design
 
