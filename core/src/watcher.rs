@@ -20,7 +20,7 @@ use tokio::{
     task::JoinHandle,
 };
 
-use crate::{objects::Objects, project::Project};
+use crate::{objects::Objects, path_is_child, path_is_parent, project::Project};
 
 const POLL_SECONDS: u64 = 1;
 
@@ -47,30 +47,14 @@ pub struct NotifyWatcher {
 
 // todo: NotifyWatcher need's to
 impl NotifyWatcher {
-    // Some(event) = rx.recv() => {
-    //     // todo: This is now in the
-    //     for path in &event.paths {
-    //         let roots = roots.lock().await;
-    //         for file_ignorer in roots.values() {
-    //             // todo: Currently transient files (files that were created and
-    //             // deleted i.e from an editor like vim) would be sent to the server. We need to detect these files and ignore them
-    //             // to resolve this we can spawn an async event on file
-    //             // creation, after 100ms or something if we haven't received a
-    //             // delete event we send the file created. to do this we can
-    //             // either maintain a Mutex of "just_created" or use a broadcast
-    //             // to debounce the sending
-    //             if let Some(relative_path) = file_ignorer.exists_parent(path, path.is_dir()) {
-    //                 // println!("[client] todo: send {:?} {:?} {relative_path:?} to stream store", event.kind, event.attrs);
-    //             } else {
-    //                 // println!("[client] ignored {path:?}");
-    //             }
-    //         }
-    //     }
-    //     // so now we go through the root's and we dictate where we send the
-    //     // todo: We need to add a sneaky lil .gitignore check here too
-    //     // to do this we somehow need to store the watcher path here... we
-    //     // might need to spawn a new task whenever we watch instead, womp womp.
-    // }
+    pub async fn paths_vec(&self) -> Vec<PathBuf> {
+        self.projects
+            .lock()
+            .await
+            .keys()
+            .map(|path| path.clone())
+            .collect::<Vec<_>>()
+    }
 
     pub fn new() -> Self {
         let (tx, rx) = tokio::sync::mpsc::channel::<ChangeEvent>(1000);
@@ -176,6 +160,19 @@ impl NotifyWatcher {
 #[async_trait]
 impl Watcher for NotifyWatcher {
     async fn watch<H: Hasher + Default + Send>(&mut self, path: &Path) -> Result<()> {
+        let mut do_not_continue = false;
+        for path_buf in self.paths_vec().await {
+            if path_is_child(&path, &path_buf) {
+                // the new path is a child we simply ignore the add.
+                do_not_continue = true;
+            } else if path_is_parent(&path, &path_buf) {
+                // if our new watch is above any of our current watched paths, unwatch.
+                self.unwatch(&path_buf).await?;
+            }
+        }
+        if do_not_continue {
+            return Ok(());
+        }
         self.projects
             .lock()
             .await
@@ -208,6 +205,12 @@ impl AsyncWatcher {
             receiver,
         })
     }
+    pub fn paths_vec(&self) -> Vec<PathBuf> {
+        self.watching
+            .keys()
+            .map(|path| path.clone())
+            .collect::<Vec<_>>()
+    }
 }
 
 #[async_trait]
@@ -223,6 +226,7 @@ impl Watcher for AsyncWatcher {
         } else {
             return Result::Err(anyhow!("{path:?} is not being watched"));
         }
+        self.watching.remove(path);
         Ok(())
     }
 
@@ -231,6 +235,19 @@ impl Watcher for AsyncWatcher {
     async fn watch<H: Hasher + Default + Send>(&mut self, path: &Path) -> Result<()> {
         if self.watching.contains_key(&path.to_path_buf()) {
             return Result::Err(anyhow!("{path:?} is already being watched"));
+        }
+        let mut do_not_continue = false;
+        for path_buf in self.paths_vec() {
+            if path_is_child(&path, &path_buf) {
+                // the new path is a child we simply ignore the add.
+                do_not_continue = true;
+            } else if path_is_parent(&path, &path_buf) {
+                // if our new watch is above any of our current watched paths, unwatch.
+                self.unwatch(&path_buf).await?;
+            }
+        }
+        if do_not_continue {
+            return Result::Err(anyhow!("{path:?} is a child of another watched path"));
         }
         let sender = self.sender.clone();
         let path_buf = path.to_path_buf();

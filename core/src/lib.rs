@@ -1,4 +1,7 @@
-use std::{fs::create_dir_all, path::PathBuf};
+use std::{
+    fs::create_dir_all,
+    path::{Path, PathBuf},
+};
 
 pub mod messages;
 pub mod objects;
@@ -32,4 +35,26 @@ pub fn pid_path() -> PathBuf {
     pid_path.set_file_name(package_name);
     pid_path.set_extension("pid");
     pid_path
+}
+
+fn path_is_child(path: &Path, parent: &Path) -> bool {
+    let mut path_ref = path.parent();
+    while let Some(next_path) = path_ref {
+        if next_path == parent {
+            return true;
+        }
+        path_ref = next_path.parent();
+    }
+    return false;
+}
+
+fn path_is_parent(path: &Path, child: &Path) -> bool {
+    let mut path_ref = child.parent();
+    while let Some(next_path) = path_ref {
+        if next_path == path {
+            return true;
+        }
+        path_ref = next_path.parent();
+    }
+    return false;
 }
