@@ -84,7 +84,7 @@ sink/
 
 ## Edition & Dependencies
 
-- **Rust Edition**: 2024 (non-standard, likely a typo for 2021)
+- **Rust Edition**: 2024 
 - **Async Runtime**: Tokio (selective features enabled per package)
 - **Serialization**: serde + serde_json
 - **CLI**: clap (derive macros)

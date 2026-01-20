@@ -1,0 +1,15 @@
+[package]
+name = "filebrowser"
+version = "0.1.0"
+edition = "2024"
+
+[dependencies]
+anyhow = "1.0.100"
+tokio = { version = "1.49.0", features = ["macros", "rt", "rt-multi-thread", "sync", "time", "signal"] }
+vfs = { version = "0.12.2", features = ["async-std", "async-vfs", "tokio"] }
+ratatui = "0.29"
+crossterm = { version = "0.28", features = ["event-stream"] }
+futures = "0.3.31"
+tokio-util = "0.7"
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "ansi"] }

@@ -6,11 +6,10 @@ edition = "2024"
 
 [dependencies]
 notify = "8.2.0"
-ws = "0.9.2"
-twox-hash = "1.1.2"
 anyhow = "1.0.100"
 daemonize = "0.5.0"
 core = { path = "../core" }
 tokio = { version = "1.49.0", features = ["macros", "rt", "signal"] }
 futures = "0.3.31"
 seahash = { version = "4.1.0", features = ["use_std"] }
+fastwebsockets = "0.10.0"

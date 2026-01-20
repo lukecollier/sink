@@ -5,5 +5,26 @@ authors = ["lukecollier <me@lukecollier.dev>"]
 edition = "2024"
 
 [dependencies]
+anyhow = "1.0.100"
+core = { path = "../core" }
+filebrowser = { path = "../filebrowser" }
+axum = { version = "0.8.8", features = ["http2"] }
+fastwebsockets = { version = "0.10.0", features = ["upgrade", "with_axum"] }
 similar = { version = "2.7.0", features = ["bytes", "bstr"] }
-ws = "0.9.2"
+tokio = { version = "1.49.0", features = [
+  "macros",
+  "net",
+  "rt",
+  "rt-multi-thread",
+  "tokio-macros",
+] }
+vfs = { version = "0.12.2", features = [
+  "async-std",
+  "async-vfs",
+  "embedded-fs",
+  "tokio",
+] }
+futures = "0.3.31"
+tower-http = { version = "0.6.8", features = ["timeout"] }
+tracing = "0.1"
+tracing-subscriber = { version = "0.3", features = ["fmt", "ansi"] }

@@ -1,3 +1,4 @@
+use std::io::{Read, Write};
 use std::os::unix::net::UnixStream;
 use std::path::PathBuf;
 
@@ -5,6 +6,45 @@ use anyhow::*;
 use serde::{Deserialize, Serialize};
 use tokio::io::AsyncReadExt;
 use tokio::sync::oneshot::error::TryRecvError;
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
+pub enum ClientMessage {
+    /// Deletes a file
+    Delete { path: PathBuf },
+    /// Creates a new file
+    Create {
+        path: PathBuf,
+        content: Option<String>,
+    },
+    /// Ovewrites the file with new content
+    Modify { path: PathBuf, content: String },
+}
+
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(tag = "type")]
+pub enum ServerMessage {
+    /// Deletes a file
+    Delete { path: PathBuf },
+    /// Creates a new file
+    Create {
+        path: PathBuf,
+        content: Option<String>,
+    },
+    /// Ovewrites the file with new content
+    Modify { path: PathBuf, content: String },
+    /// Changes the root of all future operations
+    Project { root: PathBuf },
+}
+
+impl TryFrom<&str> for ServerMessage {
+    type Error = Error;
+
+    fn try_from(value: &str) -> std::result::Result<Self, Self::Error> {
+        let msg: ServerMessage = serde_json::from_str(value)?;
+        Result::Ok(msg)
+    }
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 pub enum Command {
